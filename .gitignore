@@ -10,5 +10,6 @@ wheels/
 .venv
 
 data/*
+adapters/*
 *.pdf
 *.gguf
