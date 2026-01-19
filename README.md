@@ -12,6 +12,9 @@ Fine-Tuning Gemma 2 2 billion parameter base model with Rick Rubin’s _The Crea
 
 ## Data Preparation
 
+>[!Warning]
+> The book (The Creative Act ... is purchased by me and renamed as book.pdf and hard-coded in the process_book.py. So it is not included in this repository.
+
 Before training, I had to convert the raw book (PDF) into structured examples the AI could understand (`.jsonl`). I couldn't just dump the whole text in at once as it needs to be sliced into "bite-sized" philosophical thoughts. So after discussing with Claude I wrote a Python script (`process_book.py`) using [`pymupdf`](https://pymupdf.readthedocs.io/en/latest/)  to extract the text. **Note:** There are other libs and python frameworks one can use for RAG and fine-tuning data prep. Here I just used `pymupdf`
 
 1. **Cleaning**: The script removes headers, footers, and page numbers to prevent the AI from memorizing "Page 24" as part of a philosophical thought.
