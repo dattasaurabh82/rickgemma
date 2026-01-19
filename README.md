@@ -113,3 +113,108 @@ llama-server -m rubin-base-f16.gguf \
 
 Now go to a browser, on the same machine and type in [`http://127.0.0.1:8080`](http://127.0.0.1:8080)
 
+![alt text](assets/Capture-2026-01-19-225853.png)
+
+Set the below settings:
+
+| Settings | Value |
+| --- | --- |
+| 
+![alt text](assets/Capture-2026-01-19-225739.png) | `80` |
+| ![alt text](assets/Capture-2026-01-19-225713.png) | `{"stop": ["\n", "\n\n", "User:"]}` |
+
+### Try various seeds
+
+**Pro Tip for the Fine Tuned Model:**
+If you want to force a specific *kind* of answer, end your seed with a conjunction:
+
+- **"The creative act is painful, *but*..."** (Forces a pivot to hope).
+- **"The creative act is joyful, *yet*..."** (Forces a pivot to discipline/struggle).
+
+### The "Good" & Uplifting Seeds
+
+*(Focusing on connection, flow, and the joy)*
+
+```
+- When the heart is open, the work...
+- To create is to align with...
+- The universe does not judge the...
+- Joy is not a destination, but a...
+- The light we seek is already...
+- Gratitude unlocks the door to...
+```
+
+### The Neutral & Observational Seeds
+
+*(Focusing on the mechanics of perception and discipline)*
+
+```
+- A habit is nothing more than...
+- To observe without judgment allows...
+- The difference between noise and signal is...
+- Time does not exist in the...
+- The materials dictate the...
+- A mistake is simply a...
+```
+
+### The "Sad" & Melancholic Seeds
+
+*(Focusing on loss, solitude, and the void)*
+
+```
+- The silence that follows a finished work is...
+- To let go of a creation is to...
+- The shadow proves the existence of...
+- We create to fill the empty...
+- Grief is a powerful energy that...
+- The loneliness of the artist is...
+```
+
+---
+
+## Now Let’s do it in our pi5
+
+### Install llama.cpp
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install git build-essential cmake -y
+git clone https://github.com/ggerganov/llama.cpp.git
+cd llama.cpp
+cmake -B build
+cmake --build build --config Release -j 4
+
+# check the bin folder
+cd build/bin
+ls -l
+
+# Symlink everything
+sudo ln -sf /home/pi/llama.cpp/build/bin/* /usr/local/bin/ 
+# NOTE: I installed llama.cpp in my HOME dir: /home/pi/llama.cpp/ 
+```
+
+```bash
+cd ..
+mkdir models
+```
+
+### Copy over the `.gguf` model file
+
+```bash
+# On mac, from our project dir where the .gguf file is:
+scp rubin-base-f16.gguf pi@<IP OF YOUR PI>:<HOME DIR OF YOUR>/models
+```
+
+### Launch the Server
+
+- `-host 0.0.0.0`: This is crucial. It tells the Pi to accept connections from *other computers* (your Mac), not just itself.
+- `-n-gpu-layers 0`: The Pi 5 has a GPU, but `llama.cpp` runs best on the CPU/RAM for this architecture. We disable GPU offloading to avoid errors.
+
+```bash
+./build/bin/llama-server \
+  -m ~/rubin-base-f16.gguf \
+  --host 0.0.0.0 \
+  --port 8080 \
+  --ctx-size 2048 \
+  -n 100
+```
