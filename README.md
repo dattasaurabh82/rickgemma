@@ -1,5 +1,7 @@
 # README
 
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](LICENSE)
+
 Fine-Tuning Gemma 2 2 billion parameter base model with Rick Rubin’s _The Creative Act_
 
 ## The Stack
