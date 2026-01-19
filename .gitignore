@@ -11,5 +11,7 @@ wheels/
 
 data/*
 adapters/*
+fused_model_clean/
 *.pdf
 *.gguf
+*.safetensors
