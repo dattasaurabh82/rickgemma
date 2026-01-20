@@ -184,9 +184,10 @@ If you want to force a specific *kind* of answer, end your seed with a conjuncti
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo apt install git build-essential cmake -y
+sudo apt install libcurl4-openssl-dev libssl-dev -y
 git clone https://github.com/ggerganov/llama.cpp.git
 cd llama.cpp
-cmake -B build
+cmake -B build -DLLAMA_CURL=ON
 cmake --build build --config Release -j 4
 
 # check the bin folder
@@ -216,10 +217,10 @@ scp rubin-base-f16.gguf pi@<IP OF YOUR PI>:<HOME DIR OF YOUR>/models
 - `-n-gpu-layers 0`: The Pi 5 has a GPU, but `llama.cpp` runs best on the CPU/RAM for this architecture. We disable GPU offloading to avoid errors.
 
 ```bash
-./build/bin/llama-server \
-  -m ~/rubin-base-f16.gguf \
+llama-server \
+  -m /home/pi/models/rubin-base-f16.gguf \
   --host 0.0.0.0 \
   --port 8080 \
   --ctx-size 2048 \
-  -n 100
+  -n 60
 ```
