@@ -239,12 +239,12 @@ def clone_voice(audio_file, transcript_text, transcript_file, voice_name, model_
         voices = get_cached_voices()
         gr.Info(f"Voice '{voice_name}' cloned successfully!", duration=5)
         return (
-            gr.update(choices=voices, value=voice_name),
-            gr.update(value=get_voices_table()),
+            gr.update(choices=voices, value=voice_name),  # gen_voice
+            gr.update(value=get_voices_table()),          # voices table
             f"Voice '{voice_name}' cloned successfully!",
-            gr.update(interactive=False),
-            gr.update(interactive=True),
-            None,
+            gr.update(interactive=False),                 # delete_btn
+            gr.update(interactive=True),                  # clear_all_btn
+            None,                                         # selected_voice reset
         )
     except gr.Error:
         raise
@@ -324,12 +324,12 @@ def delete_voice(voice_name):
         voices = get_cached_voices()
         gr.Info(f"Voice '{voice_name}' deleted", duration=3)
         return (
-            gr.update(choices=voices, value=voices[0] if voices else None),
-            gr.update(value=get_voices_table()),
+            gr.update(choices=voices, value=voices[0] if voices else None),  # gen_voice
+            gr.update(value=get_voices_table()),                             # table
             f"Voice '{voice_name}' deleted.",
-            gr.update(interactive=False),
-            gr.update(interactive=len(voices) > 0),
-            None,
+            gr.update(interactive=False),                                    # delete_btn
+            gr.update(interactive=len(voices) > 0),                          # clear_all_btn
+            None,                                                            # selected_voice reset
         )
     except gr.Error:
         raise
@@ -353,8 +353,8 @@ def clear_all_voices():
         if not voices:
             gr.Info("No voices to delete", duration=3)
             return (
-                gr.update(choices=[], value=None),
-                gr.update(value=[]),
+                gr.update(choices=[], value=None),        # gen_voice
+                gr.update(value=[]),                      # table
                 "No voices to delete.",
                 gr.update(interactive=False),
                 gr.update(interactive=False),
@@ -397,11 +397,11 @@ def refresh_voices():
     """Refresh the voices list."""
     voices = get_cached_voices()
     return (
-        gr.update(choices=voices, value=voices[0] if voices else None),
-        gr.update(value=get_voices_table()),
-        gr.update(interactive=False),           # delete_btn (no selection after refresh)
-        gr.update(interactive=len(voices) > 0), # clear_all_btn
-        None,                                   # selected_voice reset
+        gr.update(choices=voices, value=voices[0] if voices else None),  # gen_voice
+        gr.update(value=get_voices_table()),                             # table
+        gr.update(interactive=False),                                    # delete_btn
+        gr.update(interactive=len(voices) > 0),                          # clear_all_btn
+        None,                                                            # selected_voice reset
     )
 
 
@@ -421,13 +421,16 @@ def create_ui():
     initial_voices = get_cached_voices()
     initial_table = get_voices_table()
     
-    # Theme: Monochrome with mono fonts
+    # Theme: Monochrome with lighter mono font
     theme = gr.themes.Monochrome(
-        font=gr.themes.GoogleFont("JetBrains Mono"),
-        font_mono=gr.themes.GoogleFont("JetBrains Mono"),
+        font=gr.themes.GoogleFont("IBM Plex Mono", weights=[300, 400]),
+        font_mono=gr.themes.GoogleFont("IBM Plex Mono", weights=[300, 400]),
     )
     
-    with gr.Blocks(title="Voice Cloning with Qwen3-TTS", theme=theme) as app:
+    # CSS for lighter font weights
+    css = "* { font-weight: 300 !important; } h1, h2 { font-weight: 400 !important; }"
+    
+    with gr.Blocks(title="Voice Cloning with Qwen3-TTS") as app:
         gr.Markdown("# Voice Cloning with Qwen3-TTS")
         gr.Markdown("Clone voices and generate speech using [Qwen3-TTS](https://huggingface.co/collections/Qwen/qwen3-tts)")
         
@@ -517,15 +520,15 @@ def create_ui():
         with gr.Group():
             gr.Markdown("## Manage Voices")
             
-            # State to track selected voice
-            selected_voice = gr.State(None)
-            
             voices_table = gr.Dataframe(
                 headers=["Name", "Model", "Created", "Reference Audio"],
                 value=initial_table,
                 interactive=False,
-                label="Click a row to select",
+                label="Click a row to select, then delete",
             )
+            
+            # Hidden state to track selected voice
+            selected_voice = gr.State(None)
             
             with gr.Row():
                 refresh_btn = gr.Button("Refresh", scale=1)
@@ -537,17 +540,18 @@ def create_ui():
         # ----- EVENT HANDLERS -----
         
         # Handle table row selection
-        def on_table_select(evt: gr.SelectData, table_data):
-            if evt.index is not None and table_data is not None and len(table_data) > 0:
+        def on_table_select(evt: gr.SelectData):
+            if evt.index is not None:
                 row_idx = evt.index[0] if isinstance(evt.index, (list, tuple)) else evt.index
-                if row_idx < len(table_data):
-                    voice_name = table_data[row_idx][0]  # First column is name
+                voices = get_cached_voices()
+                if row_idx < len(voices):
+                    voice_name = voices[row_idx]
                     return voice_name, gr.update(interactive=True), f"Selected: {voice_name}"
             return None, gr.update(interactive=False), ""
         
         voices_table.select(
             fn=on_table_select,
-            inputs=[voices_table],
+            inputs=[],
             outputs=[selected_voice, delete_btn, manage_status],
         )
         
@@ -608,7 +612,7 @@ def create_ui():
             elem_classes="footer"
         )
     
-    return app
+    return app, theme, css
 
 
 # =============================================================================
@@ -625,5 +629,11 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    app = create_ui()
-    app.launch(server_name=args.host, server_port=args.port, share=args.share)
+    app, theme, css = create_ui()
+    app.launch(
+        server_name=args.host,
+        server_port=args.port,
+        share=args.share,
+        theme=theme,
+        css=css,
+    )
