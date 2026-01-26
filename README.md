@@ -4,6 +4,8 @@ A simple command-line tool for cloning voices and generating speech using [Qwen3
 
 Clone any voice from a short audio sample, then generate unlimited speech in that voice.
 
+Includes both a **CLI** (`main.py`) and a **Web UI** (`app.py`).
+
 ---
 
 ## Features
@@ -42,35 +44,97 @@ That's it! The voice is cached and ready to use anytime.
 
 ```bash
 # Clone the repo
-git clone <your-repo-url>
+git clone git@github.com:dattasaurabh82/rickgemma.git
 cd rickgemma
 
-# Install dependencies (using uv)
+# Switch to voice branch (TTS code is here)
+git checkout voice
+
+# Install dependencies
 uv sync
 ```
+
+> [!Note]
+> This project uses [uv](https://github.com/astral-sh/uv) for Python package management. 
+> Install it first if you don't have it: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 ### Download Models
 
 You need at least one model. The 1.7B model has better quality, 0.6B is faster.
 
 ```bash
-# 1.7B model (recommended)
-huggingface-cli download Qwen/Qwen3-TTS-12Hz-1.7B-Base \
-  --local-dir models/Qwen3-TTS-12Hz-1.7B-Base
+# 1.7B model (recommended, ~3.5GB)
+hf download Qwen/Qwen3-TTS-12Hz-1.7B-Base --local-dir models/Qwen3-TTS-12Hz-1.7B-Base
 
-# 0.6B model (lighter)
-huggingface-cli download Qwen/Qwen3-TTS-12Hz-0.6B-Base \
-  --local-dir models/Qwen3-TTS-12Hz-0.6B-Base
+# 0.6B model (lighter, ~1.2GB)
+hf download Qwen/Qwen3-TTS-12Hz-0.6B-Base --local-dir models/Qwen3-TTS-12Hz-0.6B-Base
 ```
+
+See [Qwen3-TTS on Hugging Face](https://huggingface.co/Qwen/Qwen3-TTS) for more details.
 
 > [!Tip]
 > Start with the 0.6B model for testing — it's faster to download and run.
+
+### Prepare voice cloning data
+
+> [!Important]
+> May vary how you get the .wav audio data and the respective transcript in txt format, bit one method is listed below - to use any youtube speaker
+
+#### Audio Clips (2 separate clips)
+
+Although 1 clip fo 15 sec is okay
+
+> [!Warning]
+> Make sure you have `ffmpeg` installed
+
+```bash
+cd data
+
+# Clip 1: First 10 seconds (0:00 - 0:10)
+yt-dlp -x --audio-format wav -f bestaudio --download-sections "*00:00:00-00:00:10" -o "clip_01_10sec.%(ext)s" "[A YOUTUBE LINK OF A PERSON SPEAKING WHOSE VOICE YOU WANT TO CLONE]
+
+# Clip 2: Next 15 seconds (0:10 - 0:25)
+yt-dlp -x --audio-format wav -f bestaudio --download-sections "*00:00:10-00:00:25" -o "clip_02_15sec.%(ext)s" "[A YOUTUBE LINK OF A PERSON SPEAKING WHOSE VOICE YOU WANT TO CLONE]
+```
+
+#### Transcript Clips (extract text by timestamp)
+
+First download the full subtitle, then use awk to extract by time range
+
+```bash
+# Step 1: Download full subtitles
+yt-dlp --skip-download --write-auto-subs --sub-lang en --convert-subs srt -o "full" "[A YOUTUBE LINK OF A PERSON SPEAKING WHOSE VOICE YOU WANT TO CLONE]"
+
+# Step 2: Extract transcript for 0:00-0:10 (clip 1)
+awk '/^00:00:0[0-9],[0-9]+ -->/{p=1; next} /^00:00:[1-9][0-9],[0-9]+ -->/{p=0} /^[0-9]+$/{next} /^$/{next} /-->/{next} p' full_en.srt | awk '!seen[$0]++ && NF' > data/transcript_clip_01.txt
+
+# Step 3: Extract transcript for 0:10-0:25 (clip 2)
+awk '/^00:00:(1[0-9]|2[0-4]),[0-9]+ -->/{p=1; next} /^00:00:2[5-9],[0-9]+ -->/{p=0} /^00:00:[3-9][0-9]+ -->/{p=0} /^[0-9]+$/{next} /^$/{next} /-->/{next} p' full_en.srt | awk '!seen[$0]++ && NF' > data/transcript_clip_02.txt
+
+rm full_en.srt
+cd ..
+```
 
 ---
 
 ## Usage
 
-### Basic Commands
+### Web Interface (Gradio)
+
+```bash
+# Local only
+uv run app.py
+
+# Accessible on network
+uv run app.py --host 0.0.0.0 --port 7860
+
+# Public share link
+uv run app.py --share
+```
+
+Opens at `http://127.0.0.1:7860` (or your specified host/port).
+
+### CLI Commands
 
 | Command | Description |
 |---------|-------------|
@@ -162,7 +226,8 @@ rickgemma/
 │   └── output.wav
 ├── logs/                            # Log files
 │   └── tts.log                      # Last run log (overwritten each run)
-├── main.py                          # Main CLI
+├── main.py                          # CLI
+├── app.py                           # Web UI (Gradio)
 └── pyproject.toml
 ```
 

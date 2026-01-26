@@ -1645,12 +1645,14 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "colorama" },
+    { name = "gradio" },
     { name = "qwen-tts" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "colorama", specifier = ">=0.4.6" },
+    { name = "gradio", specifier = ">=6.4.0" },
     { name = "qwen-tts", specifier = ">=0.0.5" },
 ]
 
