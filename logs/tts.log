@@ -1,0 +1,27 @@
+=== Qwen3-TTS Log - 2026-01-26T19:04:22.792890 ===
+
+
+============================================================
+  Qwen3-TTS Voice Cloning
+============================================================
+  Mode:  CACHED
+  Voice: rick
+  Model: 1.7B
+============================================================
+[Device] MPS → float32
+[Model] Loading 1.7B from Qwen3-TTS-12Hz-1.7B-Base...
+[Model] Loaded
+
+[Cached] Voice: rick
+[Cache] Loaded voice 'rick'
+
+[TTS] Generating...
+  Text: "Hello there. Can you guess whose voice is this?"
+
+[Output] /Users/saurabhdatta/Documents/Projects/rickgemma/outputs/output.wav
+  Duration: 3.75s @ 24000Hz
+
+============================================================
+Done!
+
+[Cleanup] Releasing model...
