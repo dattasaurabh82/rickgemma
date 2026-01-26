@@ -1,0 +1,17 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+.env
+
+# Virtual environments
+.venv
+
+models/Qwen3-TTS-12Hz-0.6B-Base/*
+models/Qwen3-TTS-12Hz-1.7B-Base/*
+output/*.wav
+logs/*.log
